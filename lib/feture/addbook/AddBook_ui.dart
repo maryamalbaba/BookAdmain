@@ -7,7 +7,7 @@ import 'package:adminbook/core/components/assets_manager.dart';
 import 'package:adminbook/core/components/components.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 
 class AddBook_ui extends StatefulWidget {
   AddBook_ui({super.key});
@@ -30,10 +30,6 @@ class _AddBook_uiState extends State<AddBook_ui> {
   TextEditingController Files_Controller = TextEditingController();
 
   TextEditingController description_Controller = TextEditingController();
-
-  File image = File("assets/images/addButton.png");
-
-  File pdf = File("assets/images/cachmemory.pdf");
 
   final picker = ImagePicker();
 
@@ -63,51 +59,77 @@ class _AddBook_uiState extends State<AddBook_ui> {
     }
   }
 
-  Future createbook(
-      File cover,
-      File file,
-      String title,
-      String author_name,
-      String points,
-      String description,
-      String total_pages,
-      String type_id) async {
-    var request = await http.MultipartRequest(
-        'POST', Uri.parse('http://localhost:8000/api/books'));
-    request.fields.addAll({
-      'title': title,
-      'author_name': author_name,
-      'points': points,
-      'description': description,
-      'total_pages': total_pages,
-      'type_id': type_id
-    });
-    request.files.add(await http.MultipartFile.fromPath('file', pdf.path));
-    request.files.add(await http.MultipartFile.fromPath('cover', image.path));
-   //  request.headers.addAll(headers);
+  // Future createbook(
+  //     File cover,
+  //     File file,
+  //     String title,
+  //     String author_name,
+  //     String points,
+  //     String description,
+  //     String total_pages,
+  //     String type_id) async {
+  //   var request = await http.MultipartRequest(
+  //       'POST', Uri.parse('http://localhost:8000/api/books'));
+  //   request.fields.addAll({
+  //     'title': title,
+  //     'author_name': author_name,
+  //     'points': points,
+  //     'description': description,
+  //     'total_pages': total_pages,
+  //     'type_id': type_id
+  //   });
+  //   request.files.add(await http.MultipartFile.fromPath('file', pdf.path));
+  //   request.files.add(await http.MultipartFile.fromPath('cover', image.path));
+  //   //  request.headers.addAll(headers);
 
-    http.StreamedResponse response = await request.send();
+  //   http.StreamedResponse response = await request.send();
 
-    if (response.statusCode == 200) {
-      print(" status response is 200");
-      print(await response.stream.bytesToString());
-    } else {
-      print("status respnse is bad");
-      print(response.reasonPhrase);
-    }
-  }
-
+  //   if (response.statusCode == 200) {
+  //     print(" status response is 200");
+  //     print(await response.stream.bytesToString());
+  //   } else {
+  //     print("status respnse is bad");
+  //     print(response.reasonPhrase);
+  //   }
+  // }
+  late dynamic image;
+  late dynamic pdf;
   solveProblem() async {
-    final image = await FilePicker.platform.pickFiles();
     final file = await MultipartFile.fromFile(image!.files.first.path!,
         filename: "${image.files.first.name}.png");
 
-    final image2 = await FilePicker.platform.pickFiles();
     final file2 = await MultipartFile.fromFile(image!.files.first.path!,
         filename: "${image.files.first.name}.pdf");
-   
+    var headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    };
+    var data = FormData.fromMap({
+      'cover': file,
+      'file': file2,
+      'title': Title_controller.text,
+      'author_name': auther_name_Controller.text,
+      'points': Points_Controller.text,
+      'description': description_Controller.text,
+      'total_pages': Totalpage_Controller.text,
+      'type_id': Type_Controller.text
+    });
 
-    
+    var dio = Dio();
+    var response = await dio.request(
+      'http://localhost:8000/api/books',
+      options: Options(
+        method: 'POST',
+        headers: headers,
+      ),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      print(json.encode(response.data));
+    } else {
+      print(response.statusMessage);
+    }
   }
 
   @override
@@ -135,8 +157,8 @@ class _AddBook_uiState extends State<AddBook_ui> {
                     height: 20,
                   ),
                   InkWell(
-                    onTap: () {
-                      getimage();
+                    onTap: () async {
+                      image = await FilePicker.platform.pickFiles();
                     },
                     child: Container(
                         width: 200,
@@ -178,8 +200,8 @@ class _AddBook_uiState extends State<AddBook_ui> {
             hintText1: 'Files',
             controller: Files_Controller,
             IconButton: IconButton(
-              onPressed: () {
-                getpdf();
+              onPressed: () async {
+                pdf = await FilePicker.platform.pickFiles();
               },
               icon: Icon(Icons.folder),
             ),
@@ -190,16 +212,16 @@ class _AddBook_uiState extends State<AddBook_ui> {
               padding: const EdgeInsets.all(8.0),
               child: InkWell(
                 onTap: () async {
-                  createbook(
-                      pdf!,
-                      image!,
-                      Title_controller.text,
-                      auther_name_Controller.text,
-                      Points_Controller.text,
-                      description_Controller.text,
-                      Totalpage_Controller.text,
-                      "");
-                //  await solveProblem();
+                  // createbook(
+                  //     pdf!,
+                  //     image!,
+                  //     Title_controller.text,
+                  //     auther_name_Controller.text,
+                  //     Points_Controller.text,
+                  //     description_Controller.text,
+                  //     Totalpage_Controller.text,
+                  //     "");
+                  await solveProblem();
                 },
                 child: Container(
                   width: 40,
